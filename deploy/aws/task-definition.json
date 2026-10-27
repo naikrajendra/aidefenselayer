@@ -1,0 +1,61 @@
+{
+  "family": "ai-defense-layer",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::<ACCOUNT_ID>:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::<ACCOUNT_ID>:role/aiDefenseTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "ai-defense-layer",
+      "image": "<ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com/ai-defense-layer:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "hostPort": 8080,
+          "protocol": "tcp"
+        },
+        {
+          "containerPort": 9090,
+          "hostPort": 9090,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        { "name": "SERVER_PORT", "value": "8080" },
+        { "name": "GRPC_SERVER_PORT", "value": "9090" },
+        { "name": "KAFKA_BOOTSTRAP_SERVERS", "value": "kafka-broker:9092" },
+        { "name": "OPENAI_API_KEY", "value": "${OPENAI_API_KEY}" },
+        { "name": "JAVA_OPTS", "value": "-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0" }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/ai-defense-layer",
+          "awslogs-region": "<REGION>",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "curl -f http://localhost:8080/api/defense/health || exit 1"
+        ],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 60
+      }
+    }
+  ],
+  "tags": [
+    {
+      "key": "app",
+      "value": "ai-defense-layer"
+    }
+  ]
+}

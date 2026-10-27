@@ -1,0 +1,59 @@
+name: ai-defense-layer
+location: eastus
+identity:
+  type: UserAssigned
+  userAssignedIdentities:
+    - /subscriptions/<SUBSCRIPTION_ID>/resourceGroups/<RESOURCE_GROUP>/providers/Microsoft.ManagedIdentity/userAssignedIdentities/<IDENTITY_NAME>
+properties:
+  managedEnvironmentId: /subscriptions/<SUBSCRIPTION_ID>/resourceGroups/<RESOURCE_GROUP>/providers/Microsoft.App/managedEnvironments/<ENVIRONMENT_NAME>
+  configuration:
+    ingress:
+      external: true
+      targetPort: 8080
+      allowInsecure: false
+      transport: auto
+    activeRevisionsMode: Single
+    secrets:
+      - name: openai-api-key
+        value: "<OPENAI_API_KEY>"
+      - name: kafka-bootstrap-servers
+        value: "<KAFKA_BOOTSTRAP_SERVERS>"
+  template:
+    containers:
+      - name: ai-defense-layer
+        image: <REGISTRY>.azurecr.io/ai-defense-layer:latest
+        env:
+          - name: SERVER_PORT
+            value: "8080"
+          - name: GRPC_SERVER_PORT
+            value: "9090"
+          - name: KAFKA_BOOTSTRAP_SERVERS
+            secretRef: kafka-bootstrap-servers
+          - name: OPENAI_API_KEY
+            secretRef: openai-api-key
+        resources:
+          cpu: 0.5
+          memory: 1Gi
+        probes:
+          - type: Liveness
+            httpGet:
+              path: /api/defense/health
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          - type: Readiness
+            httpGet:
+              path: /api/defense/health
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 20
+            periodSeconds: 15
+    scale:
+      minReplicas: 1
+      maxReplicas: 3
+      rules:
+        - name: http-scale-rule
+          http:
+            metadata:
+              concurrentRequests: "50"

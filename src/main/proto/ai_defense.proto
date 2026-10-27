@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package com.aidefenselayer.proto;
+
+option java_multiple_files = true;
+option java_package = "com.aidefenselayer.proto";
+
+message UserContextProto {
+  string user_id = 1;
+  repeated string roles = 2;
+  repeated string permissions = 3;
+  string session_id = 4;
+}
+
+message SystemManifestProto {
+  repeated string system_instructions = 1;
+  repeated string allowed_tools = 2;
+  repeated string available_mcp_servers = 3;
+  repeated string boundary_rules = 4;
+}
+
+message DefenseRequestProto {
+  string execution_phase = 1;
+  string payload_type = 2;
+  string content = 3;
+  UserContextProto user_context = 4;
+  SystemManifestProto system_manifest = 5;
+}
+
+message TelemetryProto {
+  int64 processing_time_ms = 1;
+  int32 input_tokens = 2;
+  int32 output_tokens = 3;
+  map<string, string> operational_metadata = 4;
+}
+
+message DefenseResponseProto {
+  string decision = 1;
+  string processed_content = 2;
+  double risk_score = 3;
+  repeated string triggered_scanners = 4;
+  TelemetryProto telemetry = 5;
+}
+
+service AiDefenseService {
+  rpc Evaluate(DefenseRequestProto) returns (DefenseResponseProto);
+}

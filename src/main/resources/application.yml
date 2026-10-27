@@ -1,0 +1,53 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+grpc:
+  server:
+    port: ${GRPC_SERVER_PORT:9090}
+
+spring:
+  application:
+    name: ai-defense-layer
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY:dummy-key}
+      chat:
+        options:
+          model: gpt-4o-mini
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+ai-defense:
+  latency-budget-ms: 2000
+  token-budget: 12000
+  injection-patterns:
+    - "ignore previous instructions"
+    - "override system"
+    - "developer mode"
+    - "jailbreak"
+    - "system prompt"
+    - "reveal hidden instructions"
+  toxic-terms:
+    - "kill"
+    - "bomb"
+    - "weapon"
+    - "hate"
+    - "racial slur"
+  policy-message: "I cannot fulfill this request based on security policies."
+
+logging:
+  level:
+    com.aidefenselayer: INFO
+    org.apache.kafka: WARN
