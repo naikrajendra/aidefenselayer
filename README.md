@@ -155,7 +155,7 @@ C4Deployment
     Rel(az_app, az_kafka, "Publishes risk events")
     Rel(gcp_app, gcp_kafka, "Publishes risk events")
 
-    User(user, "Gateway / App / API Consumer")
+    Person(user, "Gateway / App / API Consumer")
     Rel(user, aws_app, "Calls via AWS-hosted app")
     Rel(user, az_app, "Calls via Azure-hosted app")
     Rel(user, gcp_app, "Calls via GCP-hosted app")
